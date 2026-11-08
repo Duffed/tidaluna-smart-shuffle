@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1
+
+- Fix favorites detection for the live client source `my_items` with original context `MY_TRACKS`.
+- Keep the favorites source stable while an inserted recommendation has context `UNKNOWN`; do not enable videos or other `my_items` contexts.
+- Add regression coverage for the exact client source and complete favorites exclusion.
+- Verify three regular favorites, recommendation insertion/playback, and return to the favorites queue with progress at 1/3 in Tidal Desktop 2.47.0.
+
 ## 0.2.0
 
 - Support favorites under My Collection → Tracks, including full favorite-ID exclusion without a playlist ID.

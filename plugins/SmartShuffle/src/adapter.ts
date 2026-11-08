@@ -26,7 +26,7 @@ export function snapshot(includeAlbums = false): Snapshot {
   const entityType = queue.sourceEntityType?.toLowerCase() ?? '';
   const kind = entityType === 'playlist' ? 'playlist'
     : entityType === 'favoritetracks' || entityType === 'my_tracks' ||
-      ((!entityType || entityType === 'tracklist') && queue.originalSource[0]?.context.type === 'MY_TRACKS') ? 'favorites'
+      ((!entityType || entityType === 'tracklist' || entityType === 'my_items') && queue.originalSource[0]?.context.type === 'MY_TRACKS') ? 'favorites'
     : entityType === 'album' ? 'album' : entityType;
   const reason = !['playlist', 'favorites', 'album'].includes(kind) ? 'Available for playlists, favorites, and optionally albums.'
     : kind === 'album' && !includeAlbums ? 'Disabled for albums. Enable albums in the plugin settings.'

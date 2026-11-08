@@ -21,6 +21,6 @@ export function Settings() {
     <p>The star is teal when available and gray when off or unavailable for the current source.</p>
     <p role="status">{status}</p>
     <details><summary>Last radio request diagnostics</summary><pre style={{ whiteSpace: 'pre-wrap', fontSize: 12 }}>{details}</pre></details>
-    <small>Version 0.2.0 · Playlist playback tested in the desktop client. Favorites and albums covered by simulated tests; live verification pending.</small>
+    <small>Version 0.2.1 · Playlist and favorites playback tested in the desktop client. Album live verification pending.</small>
   </section>;
 }

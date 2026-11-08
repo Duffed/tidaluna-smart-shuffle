@@ -112,6 +112,31 @@ test('MY_TRACKS original context identifies favorites for a generic trackList so
     state.playQueue.elements[0].context = currentContext;
   }
 });
+test('live favorites source my_items requires MY_TRACKS and stays recognized during an inserted recommendation', async () => {
+  const previousType = state.playQueue.sourceEntityType, previousId = state.playQueue.sourceEntityId;
+  const originalContext = state.playQueue.originalSource[0].context;
+  const currentContext = state.playQueue.elements[0].context;
+  try {
+    state.playQueue.sourceEntityType = 'my_items';
+    state.playQueue.sourceEntityId = '';
+    state.playQueue.originalSource[0].context = { type: 'MY_TRACKS' };
+    const source = snapshot().source;
+    assert.equal(snapshot().eligible, true);
+    assert.equal(JSON.parse(source)[2], 'favorites');
+    assert.deepEqual(await makePorts(() => {}).collectionIds(source, new AbortController().signal), ['1', 'favorite-not-loaded-in-queue']);
+    state.playQueue.elements[0].context = { type: 'UNKNOWN' };
+    assert.equal(snapshot().source, source);
+    assert.equal(snapshot().eligible, true);
+    state.playQueue.originalSource[0].context = { type: 'MY_VIDEOS' };
+    assert.equal(snapshot().eligible, false);
+    state.playQueue.originalSource[0].context = { type: 'UNKNOWN' };
+    assert.equal(snapshot().eligible, false);
+  } finally {
+    state.playQueue.sourceEntityType = previousType; state.playQueue.sourceEntityId = previousId;
+    state.playQueue.originalSource[0].context = originalContext;
+    state.playQueue.elements[0].context = currentContext;
+  }
+});
 test('albums require explicit opt-in; remote playback, repeat one and videos stay ineligible after opt-in', () => {
   const previousType = state.playQueue.sourceEntityType;
   try {

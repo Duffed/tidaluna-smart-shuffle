@@ -79,9 +79,9 @@ Rebuild with `pnpm build` after source changes, then reload the plugin. There is
 
 ## Compatibility and testing
 
-The playlist flow has been tested in Tidal Desktop 2.47.0 using manual Next transitions: radio loading, insertion, recommendation playback, and return to the original playlist. The star placement was also checked in the client.
+Playlist and favorites flows have been tested in Tidal Desktop 2.47.0 using manual Next transitions: radio loading, insertion, recommendation playback, and return to the original collection with the counter restarting at 1/3. The star placement was also checked in the client.
 
-Version 0.2.0 adds favorites, album opt-in, context-sensitive icon color, and an English interface. These additions have automated simulated coverage; their live client check is pending. Natural track-end transitions, remote devices, Repeat modes, and full-screen/compact layouts need broader testing. See [VALIDATION.md](VALIDATION.md).
+Version 0.2.1 fixes favorites recognition for the live `my_items` / `MY_TRACKS` source. Album opt-in has simulated coverage; its live client check is still pending. Natural track-end transitions, remote devices, Repeat modes, and full-screen/compact layouts need broader testing. See [VALIDATION.md](VALIDATION.md).
 
 `types/luna.d.ts` contains narrow compatibility contracts based on TidaLuna commit `19b83373cacd55caddaa656e2481283d4ce06fd1`. Type checking uses these local contracts, not an installed full SDK. Internal Tidal APIs and UI selectors can change.
 
