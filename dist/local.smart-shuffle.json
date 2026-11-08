@@ -1,0 +1,18 @@
+{
+  "name": "@local/smart-shuffle",
+  "version": "0.2.0",
+  "description": "Discover similar tracks between songs in playlists, favorites, and optional album playback",
+  "main": "./src/index.ts",
+  "type": "module",
+  "author": {
+    "name": "Duffed",
+    "url": "https://github.com/Duffed"
+  },
+  "license": "MS-PL",
+  "homepage": "https://github.com/Duffed/tidaluna-smart-shuffle",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Duffed/tidaluna-smart-shuffle.git"
+  },
+  "hash": "0dwcWcffHNw"
+}

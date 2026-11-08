@@ -1,0 +1,7 @@
+{
+  "name": "tidaluna-smart-shuffle", "version": "0.2.0", "private": true, "type": "module", "license": "MS-PL",
+  "scripts": { "build": "node scripts/build.mjs", "typecheck": "tsc --noEmit", "test": "node scripts/test.mjs", "serve": "node scripts/serve.mjs" },
+  "engines": { "node": ">=22" },
+  "packageManager": "pnpm@11.25.0",
+  "devDependencies": { "typescript": "5.9.3", "esbuild": "0.25.12", "@types/node": "22.19.0", "@types/react": "19.2.8" }
+}

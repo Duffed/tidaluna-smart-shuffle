@@ -1,0 +1,12 @@
+{
+  "name": "Smart Shuffle",
+  "description": "Smart Shuffle for TidaLuna",
+  "author": {
+    "name": "Duffed",
+    "url": "https://github.com/Duffed"
+  },
+  "homepage": "https://github.com/Duffed/tidaluna-smart-shuffle",
+  "plugins": [
+    "local.smart-shuffle.mjs"
+  ]
+}
