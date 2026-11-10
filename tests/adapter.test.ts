@@ -65,7 +65,7 @@ test('adapter normalizes IDs, detects transitions, and gates playlist/local/repe
   state.playbackControls.playbackContext!.actualProductId = '1';
   state.remotePlayback.isConnected = true; assert.equal(snapshot().eligible, false); state.remotePlayback.isConnected = false;
   state.playQueue.repeatMode = 2; assert.equal(snapshot().eligible, false); state.playQueue.repeatMode = 0;
-  state.playQueue.sourceEntityType = 'album'; assert.equal(snapshot().eligible, false); state.playQueue.sourceEntityType = 'playlist';
+  state.playQueue.sourceEntityType = 'album'; assert.equal(snapshot().eligible, true); state.playQueue.sourceEntityType = 'playlist';
   state.playbackControls.mediaProduct.productType = 'video'; assert.equal(snapshot().eligible, false);
   state.playbackControls.mediaProduct.productType = 'track';
   state.activePlayer.activePlayer = 'EXTERNAL_PLAYER'; assert.equal(snapshot().eligible, false);
@@ -105,7 +105,7 @@ test('MY_TRACKS original context identifies favorites for a generic trackList so
     assert.equal(snapshot().eligible, true);
     assert.equal(JSON.parse(snapshot().source)[2], 'favorites');
     state.playQueue.sourceEntityType = 'mix';
-    assert.equal(snapshot().eligible, false);
+    assert.equal(snapshot().eligible, true);
   } finally {
     state.playQueue.sourceEntityType = previousType;
     state.playQueue.originalSource[0].context = originalContext;
@@ -128,32 +128,25 @@ test('live favorites source my_items requires MY_TRACKS and stays recognized dur
     assert.equal(snapshot().source, source);
     assert.equal(snapshot().eligible, true);
     state.playQueue.originalSource[0].context = { type: 'MY_VIDEOS' };
-    assert.equal(snapshot().eligible, false);
+    assert.equal(snapshot().eligible, true);
     state.playQueue.originalSource[0].context = { type: 'UNKNOWN' };
-    assert.equal(snapshot().eligible, false);
+    assert.equal(snapshot().eligible, true);
   } finally {
     state.playQueue.sourceEntityType = previousType; state.playQueue.sourceEntityId = previousId;
     state.playQueue.originalSource[0].context = originalContext;
     state.playQueue.elements[0].context = currentContext;
   }
 });
-test('albums require explicit opt-in; remote playback, repeat one and videos stay ineligible after opt-in', () => {
+test('albums work globally; remote playback, repeat one and videos remain suspended', () => {
   const previousType = state.playQueue.sourceEntityType;
   try {
     state.playQueue.sourceEntityType = 'album';
-    assert.equal(snapshot().eligible, false);
-    assert.match(snapshot().reason!, /Disabled for albums/);
-    assert.equal(snapshot(true).eligible, true);
-    let albums = false;
-    const ports = makePorts(() => {}, () => {}, () => albums);
-    assert.equal(ports.snapshot().eligible, false);
-    albums = true; assert.equal(ports.snapshot().eligible, true);
-    albums = false; assert.equal(ports.snapshot().eligible, false);
-    state.remotePlayback.isConnected = true; assert.equal(snapshot(true).eligible, false);
+    assert.equal(makePorts(() => {}).snapshot().eligible, true);
+    state.remotePlayback.isConnected = true; assert.equal(snapshot().eligible, false);
     state.remotePlayback.isConnected = false;
-    state.playQueue.repeatMode = 2; assert.equal(snapshot(true).eligible, false);
+    state.playQueue.repeatMode = 2; assert.equal(snapshot().eligible, false);
     state.playQueue.repeatMode = 0;
-    state.playbackControls.mediaProduct.productType = 'video'; assert.equal(snapshot(true).eligible, false);
+    state.playbackControls.mediaProduct.productType = 'video'; assert.equal(snapshot().eligible, false);
   } finally {
     state.playQueue.sourceEntityType = previousType;
     state.remotePlayback.isConnected = false; state.playQueue.repeatMode = 0;
@@ -164,7 +157,7 @@ test('collection identity separates playlist, favorites and album contexts even 
   const previousType = state.playQueue.sourceEntityType;
   try {
     const sources = ['playlist', 'favoriteTracks', 'album'].map(type => {
-      state.playQueue.sourceEntityType = type; return snapshot(true).source;
+      state.playQueue.sourceEntityType = type; return snapshot().source;
     });
     assert.equal(new Set(sources).size, 3);
   } finally { state.playQueue.sourceEntityType = previousType; }
@@ -178,7 +171,7 @@ test('album membership uses the album endpoint and reads all pages', async () =>
       urls.push(String(url));
       return new Response(JSON.stringify({ totalNumberOfItems: 2, items: [{ id: urls.length }] }));
     };
-    assert.deepEqual(await makePorts(() => {}).collectionIds(snapshot(true).source, new AbortController().signal), ['1', '2']);
+    assert.deepEqual(await makePorts(() => {}).collectionIds(snapshot().source, new AbortController().signal), ['1', '2']);
     assert.match(urls[0], /\/albums\/album-id\/items/); assert.match(urls[1], /offset=1/);
   } finally {
     state.playQueue.sourceEntityType = previousType; state.playQueue.sourceEntityId = previousId;
@@ -244,4 +237,22 @@ test('queue insertion identifies its UID and removal leaves a manual item with t
   state.playQueue.elements.push({ uid: 'manual-uid', mediaItemId: '2', context: { type: 'UNKNOWN' } });
   const uid = ports.insert('2'); assert.equal(uid, 'inserted-uid'); ports.remove(uid);
   assert.ok(state.playQueue.elements.some(item => item.uid === 'manual-uid'));
+});
+
+test('all music sources work without collection IDs or collection API requests', async () => {
+  const previousType = state.playQueue.sourceEntityType, previousId = state.playQueue.sourceEntityId;
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async () => { throw new Error('No collection API for generic sources'); };
+  try {
+    const ports = makePorts(() => {});
+    for (const type of ['search', 'mix', 'radio', 'artist', 'track', 'trackList', '', 'future-source', 'album', 'playlist']) {
+      state.playQueue.sourceEntityType = type; state.playQueue.sourceEntityId = '';
+      assert.equal(ports.snapshot().eligible, true, type);
+      assert.deepEqual(await ports.collectionIds(snapshot().source, new AbortController().signal), []);
+      assert.deepEqual(snapshot().sourceIds, ['1']);
+    }
+  } finally {
+    state.playQueue.sourceEntityType = previousType; state.playQueue.sourceEntityId = previousId;
+    globalThis.fetch = previousFetch;
+  }
 });

@@ -18,7 +18,7 @@ You need the [Tidal desktop app](https://tidal.com/download) and [TidaLuna](http
    ```
 
 3. Enable the plugin, open its settings, and check **Enable Smart Shuffle**.
-4. Start a playlist or your favorite tracks. Optionally enable **Apply to albums**.
+4. Start music from any source and toggle the star in the player.
 
 You can alternatively add the store:
 
@@ -31,23 +31,23 @@ The public URLs serve the committed build from this repository. Other users do n
 ## Controls
 
 - A small **star button left of Shuffle** toggles the global switch.
-- **Teal:** Smart Shuffle is enabled and available for this source.
-- **Gray:** globally off, or unavailable here, including an album while **Apply to albums** is off. The global switch stays enabled while a source is temporarily ineligible.
+- **Teal:** Smart Shuffle is globally enabled.
+- **Gray:** Smart Shuffle is off. Temporary pauses are explained in the tooltip without changing the switch.
 - Hover over the star to see progress, the pending recommendation, or the reason it is unavailable.
 - The interval is adjustable from 1 to 20 tracks; the default is 3.
-- **Apply to albums** is a separate saved preference, off by default.
+- No separate album setting. Existing enabled/interval preferences are retained; the legacy album preference is ignored.
 
 ## Behavior
 
 Every started regular track counts, including skipped tracks. Pause/resume, seeking, and duplicate playback updates do not count again. Plugin recommendations do not count toward the next interval. Enabling the feature during a track counts that track as the first one.
 
-When the interval is reached, the plugin loads radio recommendations for the current regular track and queues the first suitable result to play next. It excludes the current collection, queued tracks, the seed track, and the last 50 tracks heard while Smart Shuffle was active. Playlist and album membership are read in full and cached for one minute. Favorites use Tidal's complete in-memory favorite-ID list and reflect changes immediately.
+When the interval is reached, the plugin loads radio recommendations for the current regular track and queues the first suitable result to play next. It excludes the current collection, queued tracks, the seed track, and the last 50 tracks heard while Smart Shuffle was active. Playlist and album membership are read in full and cached for one minute. Favorites use Tidal's complete in-memory favorite-ID list and reflect changes immediately. Other sources, and sources without a collection ID, use the loaded original source, current queue, and recent history for exclusions; unloaded tracks from those sources may still be recommended.
 
 Unavailable tracks, videos, and explicit tracks when explicit content is disabled are excluded. Recommendations use Tidal's radio ordering; there is no separate similarity service or extra API key.
 
 Only one plugin recommendation can wait in the queue. Turning Smart Shuffle off removes a waiting recommendation if its queue ID, track ID, and source still match. A recommendation already playing is allowed to finish. Manually queued entries are preserved.
 
-Changing collection or account resets progress. Remote playback and Repeat One temporarily suspend Smart Shuffle. Normal Tidal shuffle remains available. Turning **Apply to albums** off during album playback suspends insertion and removes a still-pending plugin recommendation. Radio, search results, videos, and other unsupported sources stay ineligible.
+Changing collection or account resets progress. Remote playback and Repeat One temporarily suspend Smart Shuffle. Normal Tidal shuffle remains available. Albums, radio, search results, and other music sources require no additional opt-in. Videos remain ineligible.
 
 If radio or collection loading fails, the current queue keeps playing. That recommendation slot is skipped, and another attempt is made after the next full interval. Late responses are ignored after a track/source change or deactivation.
 
@@ -81,7 +81,7 @@ Rebuild with `pnpm build` after source changes, then reload the plugin. There is
 
 Playlist and favorites flows have been tested in Tidal Desktop 2.47.0 using manual Next transitions: radio loading, insertion, recommendation playback, and return to the original collection with the counter restarting at 1/3. The star placement was also checked in the client.
 
-Version 0.2.1 fixes favorites recognition for the live `my_items` / `MY_TRACKS` source. Album opt-in has simulated coverage; its live client check is still pending. Natural track-end transitions, remote devices, Repeat modes, and full-screen/compact layouts need broader testing. See [VALIDATION.md](VALIDATION.md).
+Version 0.3.0 enables all music sources through one global switch. Album and generic-source support have simulated coverage; live client checks are still pending. Natural track-end transitions, remote devices, Repeat modes, and full-screen/compact layouts need broader testing. See [VALIDATION.md](VALIDATION.md).
 
 `types/luna.d.ts` contains narrow compatibility contracts based on TidaLuna commit `19b83373cacd55caddaa656e2481283d4ce06fd1`. Type checking uses these local contracts, not an installed full SDK. Internal Tidal APIs and UI selectors can change.
 
@@ -89,9 +89,9 @@ The core engine is in `plugins/SmartShuffle/src/engine.ts`; TidaLuna access is i
 
 ## Troubleshooting
 
-First check **Enable Smart Shuffle**, the current source, and the star tooltip. For albums, also check **Apply to albums**. The settings panel contains diagnostics for the latest radio request. If the favorites list has not loaded yet, recommendations are skipped until it becomes available.
+First check **Enable Smart Shuffle**, the current source, and the star tooltip. The settings panel contains diagnostics for the latest radio request. If the favorites list has not loaded yet, recommendations are skipped until it becomes available.
 
-Console messages start with `[SmartShuffle]`. When reporting a problem, include plugin/Tidal/TidaLuna versions, playback source, interval, whether albums are enabled, and the relevant status. Do not include credentials or full account dumps.
+Console messages start with `[SmartShuffle]`. When reporting a problem, include plugin/Tidal/TidaLuna versions, playback source, interval, and the relevant status. Do not include credentials or full account dumps.
 
 ## License and credits
 

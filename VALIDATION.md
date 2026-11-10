@@ -2,7 +2,7 @@
 
 ## Automated coverage
 
-31 tests pass, along with TypeScript checking and the plugin build. Tests use simulated state and response data; no live account credentials are used.
+32 tests pass, along with TypeScript checking and the plugin build. Tests use simulated state and response data; no live account credentials are used.
 
 - Interval counting, skips, duplicate events, pause/resume, and exclusion of plugin recommendations from the counter.
 - Cancellation after track/source changes, deactivation, and unload, including late results from transports that ignore abort.
@@ -12,9 +12,9 @@
 - Live-observed wrapped radio results (`{ item, type }`) and flat result compatibility.
 - Full playlist and album pagination; fail closed on incomplete or inaccessible membership.
 - Favorites source recognition without a playlist ID, complete favorite-ID filtering, and immediate membership updates.
-- Album opt-in defaults off, persists independently, and changes eligibility while preserving remote/video/Repeat One restrictions.
+- A single global switch preserves enabled/interval preferences and ignores legacy album opt-in. Albums and generic sources are eligible while remote/video/Repeat One restrictions remain.
 - Source identity separates playlists, favorites, albums, and accounts.
-- Exact live favorites source `my_items` with original context `MY_TRACKS`; video and unknown contexts stay ineligible.
+- Exact live favorites source `my_items` with original context `MY_TRACKS`; other contexts can also play music; eligibility follows the current media product.
 
 ## Previously checked in the desktop client
 
@@ -38,8 +38,7 @@ On November 8, 2026, the failure in 0.2.0 was reproduced: the client reported so
 
 ## Live checks still required
 
-- Album option off: no insertion, gray star, clear unavailable reason, global switch still enabled.
-- Album option on: teal star, radio recommendation, then return to the album. Disable the option with a recommendation pending and verify only that owned pending entry is removed.
+- Albums, search, radio, artist, and individual-track playback: enable the star, verify insertion and return to the original queue. Turn off with a recommendation pending and verify only the owned entry is removed.
 - Switch between album, favorites, and playlist while a radio request is in flight; no insertion into the new context.
 - Natural song-end transitions and multiple complete cycles without manually skipping.
 - Remote playback, Repeat One/All, long collections, network failures, restart/persistence, and full-screen/compact player layouts.

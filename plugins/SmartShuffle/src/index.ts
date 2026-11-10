@@ -15,11 +15,10 @@ const engine = new SmartShuffle(makePorts(message => {
 }, message => {
   setDetails(message);
   console.info('[SmartShuffle radio-format]', message);
-}, () => getPreferences().includeAlbums));
+}));
 const configure = () => {
   const prefs = getPreferences();
   engine.configure(prefs.enabled, prefs.interval);
-  // Album opt-in can change eligibility without changing global activation/interval.
   engine.tick();
 };
 let stopped = false;

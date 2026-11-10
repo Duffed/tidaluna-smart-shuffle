@@ -1,3 +1,10 @@
+# 0.3.0
+
+- Use one global Smart Shuffle switch for all local music sources, including albums, search, and radio.
+- Remove album opt-in and retain existing global switch/interval preferences.
+- For sources without collection endpoints, exclude loaded source tracks, queued tracks, and recent history.
+- Show the global enabled state consistently on the player star.
+
 # Changelog
 
 ## 0.2.1

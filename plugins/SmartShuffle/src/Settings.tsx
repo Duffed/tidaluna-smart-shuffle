@@ -14,11 +14,9 @@ export function Settings() {
         const number = event.target.valueAsNumber;
         if (Number.isFinite(number)) updatePreferences({ interval: number });
       }} /> regular tracks</label>
-    <label><input type="checkbox" checked={prefs.includeAlbums}
-      onChange={event => updatePreferences({ includeAlbums: event.target.checked })} /> Apply to albums</label>
-    <p>Works with local playlists and favorites (My Collection → Tracks), plus albums when enabled.
+    <p>One switch for all music sources: albums, playlists, favorites, search, and radio.
       Skipped tracks count; recommendations do not. You can also use Tidal's regular shuffle.</p>
-    <p>The star is teal when available and gray when off or unavailable for the current source.</p>
+    <p>The star is teal when enabled and gray when off. The status explains temporary pauses.</p>
     <p role="status">{status}</p>
     <details><summary>Last radio request diagnostics</summary><pre style={{ whiteSpace: 'pre-wrap', fontSize: 12 }}>{details}</pre></details>
     <small>Version 0.2.1 · Playlist and favorites playback tested in the desktop client. Album live verification pending.</small>

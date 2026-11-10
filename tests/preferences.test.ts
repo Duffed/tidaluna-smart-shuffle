@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { getPreferences, loadPreferences, updatePreferences } from '../plugins/SmartShuffle/src/preferences';
 
-test('old preferences migrate with albums disabled; album opt-in persists without changing the global switch', () => {
+test('legacy album preference is ignored while global switch and interval persist', () => {
   const entries = new Map<string, string>();
   const key = '@local/smart-shuffle/preferences/v1';
   const previous = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
@@ -11,11 +11,12 @@ test('old preferences migrate with albums disabled; album opt-in persists withou
     setItem: (key: string, value: string) => { entries.set(key, value); },
   } });
   try {
-    entries.set(key, JSON.stringify({ enabled: true, interval: 3 }));
-    loadPreferences(); assert.deepEqual(getPreferences(), { enabled: true, interval: 3, includeAlbums: false });
-    updatePreferences({ includeAlbums: true }); loadPreferences();
-    assert.deepEqual(getPreferences(), { enabled: true, interval: 3, includeAlbums: true });
-    updatePreferences({ includeAlbums: false });
+    entries.set(key, JSON.stringify({ enabled: true, interval: 3, includeAlbums: false }));
+    loadPreferences(); assert.deepEqual(getPreferences(), { enabled: true, interval: 3 });
+    updatePreferences({ enabled: false }); loadPreferences();
+    assert.deepEqual(getPreferences(), { enabled: false, interval: 3 });
+    assert.equal(JSON.parse(entries.get(key)!).includeAlbums, undefined);
+    updatePreferences({ enabled: true });
     assert.equal(getPreferences().enabled, true);
   } finally {
     if (previous) Object.defineProperty(globalThis, 'localStorage', previous);

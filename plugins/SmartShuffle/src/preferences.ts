@@ -1,5 +1,5 @@
-export interface Preferences { enabled: boolean; interval: number; includeAlbums: boolean }
-export const defaults: Preferences = { enabled: false, interval: 3, includeAlbums: false };
+export interface Preferences { enabled: boolean; interval: number }
+export const defaults: Preferences = { enabled: false, interval: 3 };
 const key = '@local/smart-shuffle/preferences/v1';
 let value: Preferences = { ...defaults };
 let status = 'Ready';
@@ -17,7 +17,6 @@ export function loadPreferences(): void {
     const saved = JSON.parse(localStorage.getItem(key) ?? 'null');
     if (saved) value = {
       enabled: saved.enabled === true,
-      includeAlbums: saved.includeAlbums === true,
       interval: Number.isFinite(saved.interval) ? Math.max(1, Math.min(20, Math.trunc(saved.interval))) : 3,
     };
   } catch { status = 'Could not load preferences; using defaults.'; }

@@ -15,7 +15,7 @@ export const bus: ResponseBus = {
   },
 };
 
-export function snapshot(includeAlbums = false): Snapshot {
+export function snapshot(): Snapshot {
   const state = redux.store.getState();
   const queue = state.playQueue;
   const current = queue.elements[queue.currentIndex];
@@ -28,10 +28,7 @@ export function snapshot(includeAlbums = false): Snapshot {
     : entityType === 'favoritetracks' || entityType === 'my_tracks' ||
       ((!entityType || entityType === 'tracklist' || entityType === 'my_items') && queue.originalSource[0]?.context.type === 'MY_TRACKS') ? 'favorites'
     : entityType === 'album' ? 'album' : entityType;
-  const reason = !['playlist', 'favorites', 'album'].includes(kind) ? 'Available for playlists, favorites, and optionally albums.'
-    : kind === 'album' && !includeAlbums ? 'Disabled for albums. Enable albums in the plugin settings.'
-    : kind !== 'favorites' && !queue.sourceEntityId ? 'Waiting for the music collection to load.'
-    : state.remotePlayback?.isConnected || state.activePlayer?.activePlayer === 'EXTERNAL_PLAYER' ? 'Paused during remote playback.'
+  const reason = state.remotePlayback?.isConnected || state.activePlayer?.activePlayer === 'EXTERNAL_PLAYER' ? 'Paused during remote playback.'
     : queue.repeatMode === 2 ? 'Paused while Repeat One is enabled.'
     : playback.mediaProduct?.productType !== 'track' ? 'Available for music tracks only.' : undefined;
   return {
@@ -48,12 +45,12 @@ export function snapshot(includeAlbums = false): Snapshot {
   };
 }
 
-export function makePorts(report: (message: string) => void, diagnose: (message: string) => void = () => {}, includeAlbums: () => boolean = () => false): Ports {
+export function makePorts(report: (message: string) => void, diagnose: (message: string) => void = () => {}): Ports {
   let collectionCache: { source: string; ids: string[]; expires: number } | undefined;
   let lastSource = '';
   return {
     snapshot() {
-      const result = snapshot(includeAlbums());
+      const result = snapshot();
       if (result.source !== lastSource) {
         lastSource = result.source;
         const state = redux.store.getState();
@@ -103,7 +100,9 @@ export function makePorts(report: (message: string) => void, diagnose: (message:
         if (!Array.isArray(favorites) || favorites.length === 0) throw new Error('Waiting for the favorites list to load');
         return favorites.map(id);
       }
-      if (kind !== 'playlist' && kind !== 'album') throw new Error('Unsupported music collection');
+      // Generic playback contexts have no collection endpoint. The engine also
+      // excludes the live original source, queue, and recent listening history.
+      if ((kind !== 'playlist' && kind !== 'album') || !collectionId) return [];
       if (collectionCache?.source === source && collectionCache.expires > Date.now()) return collectionCache.ids;
       const headers = await TidalApi.getAuthHeaders();
       const ids: string[] = [];

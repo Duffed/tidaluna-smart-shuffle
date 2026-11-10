@@ -24,12 +24,12 @@ export function mountPlayerSwitch(): () => void {
   button.dataset.smartShuffle = 'toggle';
   button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="m10 3 2.5 6.5L19 12l-6.5 2.5L10 21l-2.5-6.5L1 12l6.5-2.5Z"/><path d="m20 2 1 2.5L23.5 5.5 21 6.5 20 9l-1-2.5-2.5-1L19 4.5Z"/></svg>';
   const refresh = () => {
-    const { enabled, interval, includeAlbums } = getPreferences();
-    const playback = snapshot(includeAlbums);
-    button.dataset.active = String(enabled && playback.eligible);
+    const { enabled, interval } = getPreferences();
+    const playback = snapshot();
+    button.dataset.active = String(enabled);
     button.setAttribute('aria-pressed', String(enabled));
     button.setAttribute('aria-label', `Turn Smart Shuffle ${enabled ? 'off' : 'on'}`);
-    button.title = `Smart Shuffle: ${enabled ? 'on' : 'off'} · 1 recommendation every ${interval} tracks · playlists, favorites${includeAlbums ? ', and albums' : ''}\n${enabled && !playback.eligible ? playback.reason : getStatus()}`;
+    button.title = `Smart Shuffle: ${enabled ? 'on' : 'off'} · 1 recommendation every ${interval} tracks · all music sources\n${enabled && !playback.eligible ? playback.reason : getStatus()}`;
   };
   const attach = () => {
     // Keep the native controls centered: place the icon just outside their left edge,
