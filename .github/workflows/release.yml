@@ -1,10 +1,12 @@
-name: Publish plugin store
+name: Sync and publish plugin store
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
   push:
     branches: [main]
-    paths: [.github/workflows/release.yml, 'dist/**']
+    paths: [.github/workflows/release.yml, scripts/sync-prettier.mjs, 'dist/**']
 
 permissions:
   contents: write
@@ -17,55 +19,63 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Publish versioned release and refresh the compatibility download
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Sync verified Prettier build from its source repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node scripts/sync-prettier.mjs
+          node --check dist/tidaluna-prettier.mjs
+          git add dist/tidaluna-prettier.json dist/tidaluna-prettier.mjs
+          if ! git diff --cached --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'Sync verified Tidaluna Prettier store build'
+            git push origin HEAD:main
+          fi
+      - name: Publish immutable snapshot and refresh existing store address
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_COMMIT: ${{ github.sha }}
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p release-assets
-          cd release-assets
-          for asset in store.json local.smart-shuffle.json local.smart-shuffle.mjs local.smart-shuffle.mjs.map tidaluna-prettier.json tidaluna-prettier.mjs; do
-            gh api "repos/$GH_REPO/contents/dist/$asset?ref=$RELEASE_COMMIT" --jq '.content' | base64 --decode > "$asset"
-            test -s "$asset"
-          done
-          version=$(python3 -c 'import json; print(json.load(open("local.smart-shuffle.json"))["version"])')
-          python3 -c 'import json; s=json.load(open("store.json")); assert s["plugins"] == ["local.smart-shuffle.mjs", "tidaluna-prettier.mjs"]; json.load(open("local.smart-shuffle.json"))'
-          cat > notes.md <<'NOTES'
-          This store also includes Tidaluna Prettier 1.0.0: collapsible plugin cards, developer avatars, search and status filters.
-          Prettier validation: four DOM tests and build passed; live TIDAL verification pending.
-
-          Smart Shuffle adds music recommendations across all supported music sources.
-
-          - Queue-based recommendations combine up to five track radios with deterministic ranking.
-          - Choose Queue or Current track as the recommendation source.
-          - Suggest now works while paused and with automatic recommendations disabled.
-          - Recommend after every 1–20 regular tracks (default: 3).
-          - Count tracks on playback start or after 30 seconds of actual playback.
-          - English controls, progress status, and safe handling of pending recommendations.
-
-          Install through Luna Settings > Plugin Store > Install from URL:
-          https://github.com/Duffed/tidaluna-smart-shuffle/releases/download/latest/store.json
-
-          Starts disabled. Enable it in the plugin settings or player.
-
-          Validation: 46 automated tests, TypeScript check and build passed. Desktop checks covered both buttons, paused insertion, natural track transitions, the 30-second counter, and plugin reload. Compact layout and comparative listening remain unverified; see VALIDATION.md.
-          NOTES
+          commit=$(git rev-parse HEAD)
+          cd dist
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const store = JSON.parse(fs.readFileSync("store.json", "utf8"));
+            for (const name of store.plugins) {
+              if (!/^[a-z0-9.-]+\.mjs$/.test(name)) throw new Error("Invalid store entry");
+              if (!fs.statSync(name).size) throw new Error("Empty plugin code");
+              JSON.parse(fs.readFileSync(name.replace(/\.mjs$/, ".json"), "utf8"));
+            }
+          '
+          prettier=$(node -p 'JSON.parse(require("fs").readFileSync("tidaluna-prettier.json")).version')
+          smart=$(node -p 'JSON.parse(require("fs").readFileSync("local.smart-shuffle.json")).version')
+          digest=$(sha256sum tidaluna-prettier.mjs local.smart-shuffle.mjs store.json | sha256sum | cut -c1-12)
+          tag="store-${smart}-prettier-${prettier}-${digest}"
           assets=(store.json local.smart-shuffle.json local.smart-shuffle.mjs local.smart-shuffle.mjs.map tidaluna-prettier.json tidaluna-prettier.mjs)
-          tag="v$version"
-          if gh release view "$tag" >/dev/null 2>&1; then
-            echo "Version $version already exists; keeping versioned assets unchanged."
+          printf 'Duffed TidaLuna Store\n\nSmart Shuffle %s · Tidaluna Prettier %s\n\nStore: https://github.com/Duffed/tidaluna-smart-shuffle/releases/download/latest/store.json\n\nUse Duffed-Plugins aktualisieren in Plugin Store. Disabled plugins remain disabled.\n' "$smart" "$prettier" > ../release-notes.md
+          printf '\nStore-build: %s\n' "$digest" >> ../release-notes.md
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" "${assets[@]}" --target "$commit" --title "Duffed plugins: Prettier $prettier / Smart Shuffle $smart" --notes-file ../release-notes.md --latest
           else
-            gh release create "$tag" "${assets[@]}" \
-            --target "$RELEASE_COMMIT" --title "Smart Shuffle $version" --notes-file notes.md --latest
+            gh release edit "$tag" --latest
           fi
           if gh release view latest >/dev/null 2>&1; then
+            if gh release view latest --json body --jq .body | grep -Fq "Store-build: $digest"; then
+              echo 'Existing store already matches the verified build.'
+              exit 0
+            fi
             gh release upload latest "${assets[@]}" --clobber
-            gh api --method PATCH "repos/$GH_REPO/git/refs/tags/latest" -f sha="$RELEASE_COMMIT" -F force=true
-            gh release edit latest --title "Smart Shuffle $version (rolling download)" --notes-file notes.md --latest=false
+            gh api --method PATCH "repos/$GH_REPO/git/refs/tags/latest" -f sha="$commit" -F force=true
+            gh release edit latest --title 'Duffed plugins (rolling download)' --notes-file ../release-notes.md --latest=false
           else
-            gh release create latest "${assets[@]}" \
-              --target "$RELEASE_COMMIT" --title "Smart Shuffle $version (rolling download)" --notes-file notes.md --latest=false
+            gh release create latest "${assets[@]}" --target "$commit" --title 'Duffed plugins (rolling download)' --notes-file ../release-notes.md --latest=false
           fi
