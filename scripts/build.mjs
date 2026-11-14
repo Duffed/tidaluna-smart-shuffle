@@ -28,8 +28,8 @@ for (const file of result.outputFiles) await writeFile(file.path, file.contents)
 const output = result.outputFiles.find(file => file.path.endsWith('.mjs'));
 await writeFile('dist/local.smart-shuffle.json', JSON.stringify({ ...pkg, hash: output.hash }, null, 2));
 await writeFile('dist/store.json', JSON.stringify({
-  name: 'Smart Shuffle', description: 'Smart Shuffle for TidaLuna',
+  name: 'Duffed’s TidaLuna Plugins', description: 'Smart Shuffle and Tidaluna Prettier',
   author: pkg.author, homepage: pkg.homepage,
-  plugins: ['local.smart-shuffle.mjs'],
+  plugins: ['local.smart-shuffle.mjs', 'tidaluna-prettier.mjs'],
 }, null, 2));
 console.log(`Built dist/local.smart-shuffle.mjs (${output.contents.length} bytes, hash ${output.hash})`);

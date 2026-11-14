@@ -28,6 +28,10 @@ https://raw.githubusercontent.com/Duffed/tidaluna-smart-shuffle/main/dist/store.
 
 The public URLs serve the committed build from this repository. Other users do not need Node.js, pnpm, or a local server. TidaLuna appends `.json` and `.mjs` to the plugin URL; keep both files available together. The plugin ID remains `@local/smart-shuffle` for compatibility with the initial builds.
 
+## Tidaluna Prettier
+
+The same store also includes [Tidaluna Prettier](https://github.com/Duffed/tidaluna-prettier): collapsible plugin settings, developer avatars, search and status filters. Reload the store and install **Tidaluna Prettier**. Its source lives in the separate repository; this store distributes matching `.mjs` and `.json` copies in `dist/`. Update both copies together when publishing a new Prettier version.
+
 ## Controls
 
 - The **star button left of Shuffle** toggles automatic recommendations. Teal means enabled; gray means off.

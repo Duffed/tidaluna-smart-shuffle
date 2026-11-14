@@ -1,10 +1,10 @@
-name: Publish Smart Shuffle release
+name: Publish plugin store
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [.github/workflows/release.yml]
+    paths: [.github/workflows/release.yml, 'dist/**']
 
 permissions:
   contents: write
@@ -27,13 +27,16 @@ jobs:
           set -euo pipefail
           mkdir -p release-assets
           cd release-assets
-          for asset in store.json local.smart-shuffle.json local.smart-shuffle.mjs local.smart-shuffle.mjs.map; do
+          for asset in store.json local.smart-shuffle.json local.smart-shuffle.mjs local.smart-shuffle.mjs.map tidaluna-prettier.json tidaluna-prettier.mjs; do
             gh api "repos/$GH_REPO/contents/dist/$asset?ref=$RELEASE_COMMIT" --jq '.content' | base64 --decode > "$asset"
             test -s "$asset"
           done
           version=$(python3 -c 'import json; print(json.load(open("local.smart-shuffle.json"))["version"])')
-          python3 -c 'import json; s=json.load(open("store.json")); assert s["plugins"] == ["local.smart-shuffle.mjs"]; json.load(open("local.smart-shuffle.json"))'
+          python3 -c 'import json; s=json.load(open("store.json")); assert s["plugins"] == ["local.smart-shuffle.mjs", "tidaluna-prettier.mjs"]; json.load(open("local.smart-shuffle.json"))'
           cat > notes.md <<'NOTES'
+          This store also includes Tidaluna Prettier 1.0.0: collapsible plugin cards, developer avatars, search and status filters.
+          Prettier validation: four DOM tests and build passed; live TIDAL verification pending.
+
           Smart Shuffle adds music recommendations across all supported music sources.
 
           - Queue-based recommendations combine up to five track radios with deterministic ranking.
@@ -50,14 +53,14 @@ jobs:
 
           Validation: 46 automated tests, TypeScript check and build passed. Desktop checks covered both buttons, paused insertion, natural track transitions, the 30-second counter, and plugin reload. Compact layout and comparative listening remain unverified; see VALIDATION.md.
           NOTES
-          assets=(store.json local.smart-shuffle.json local.smart-shuffle.mjs local.smart-shuffle.mjs.map)
+          assets=(store.json local.smart-shuffle.json local.smart-shuffle.mjs local.smart-shuffle.mjs.map tidaluna-prettier.json tidaluna-prettier.mjs)
           tag="v$version"
           if gh release view "$tag" >/dev/null 2>&1; then
-            echo "Version $version is already published; refusing to replace versioned assets."
-            exit 1
-          fi
-          gh release create "$tag" "${assets[@]}" \
+            echo "Version $version already exists; keeping versioned assets unchanged."
+          else
+            gh release create "$tag" "${assets[@]}" \
             --target "$RELEASE_COMMIT" --title "Smart Shuffle $version" --notes-file notes.md --latest
+          fi
           if gh release view latest >/dev/null 2>&1; then
             gh release upload latest "${assets[@]}" --clobber
             gh api --method PATCH "repos/$GH_REPO/git/refs/tags/latest" -f sha="$RELEASE_COMMIT" -F force=true
