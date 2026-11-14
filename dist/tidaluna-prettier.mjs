@@ -21,7 +21,15 @@ export function installUpdateTransport(target) {
     const url = request ? input.url : String(input);
     const method = init?.method || (request ? input.method : 'GET');
     if (!isDuffedDownload(url) || method.toUpperCase() !== 'GET') return original.call(target, input, init);
-    const fresh = new URL(url); fresh.searchParams.set('tlp_update', `${Date.now()}-${++sequence}`);
+    // GitHub Raw can retain old branch content at its CDN even with a query string.
+    // Resolve those legacy download locations internally to the same rolling store assets.
+    // The persisted installation/store URL is intentionally unchanged.
+    const fresh = new URL(url);
+    if (fresh.hostname === 'raw.githubusercontent.com') {
+      fresh.hostname = 'github.com';
+      fresh.pathname = `/Duffed/tidaluna-smart-shuffle/releases/download/latest/${fresh.pathname.split('/').pop()}`;
+    }
+    fresh.searchParams.set('tlp_update', `${Date.now()}-${++sequence}`);
     const options = { ...init, cache: 'no-store' };
     return original.call(target, request ? new target.Request(fresh.href, input) : fresh.href, options);
   }
