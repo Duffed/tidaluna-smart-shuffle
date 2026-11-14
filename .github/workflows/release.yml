@@ -17,7 +17,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Download committed build and publish latest
+      - name: Publish versioned release and refresh the compatibility download
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -33,23 +33,36 @@ jobs:
           done
           version=$(python3 -c 'import json; print(json.load(open("local.smart-shuffle.json"))["version"])')
           python3 -c 'import json; s=json.load(open("store.json")); assert s["plugins"] == ["local.smart-shuffle.mjs"]; json.load(open("local.smart-shuffle.json"))'
-          if gh release view latest >/dev/null 2>&1; then
-            echo "The latest release already exists. Update it deliberately rather than overwriting published assets."
-            exit 1
-          fi
           cat > notes.md <<'NOTES'
-          Smart Shuffle adds similar tracks between songs in playlists and favorites, with optional album support.
+          Smart Shuffle adds music recommendations across all supported music sources.
 
-          - Configurable interval from 1 to 20 (default: 3).
-          - Compact player toggle and English settings.
-          - Version 0.2.1 fixes favorites playback source detection.
+          - Queue-based recommendations combine up to five track radios with deterministic ranking.
+          - Choose Queue or Current track as the recommendation source.
+          - Suggest now works while paused and with automatic recommendations disabled.
+          - Recommend after every 1–20 regular tracks (default: 3).
+          - Count tracks on playback start or after 30 seconds of actual playback.
+          - English controls, progress status, and safe handling of pending recommendations.
 
           Install through Luna Settings > Plugin Store > Install from URL:
           https://github.com/Duffed/tidaluna-smart-shuffle/releases/download/latest/store.json
 
           Starts disabled. Enable it in the plugin settings or player.
 
-          Validation: 31 automated tests, TypeScript check and build passed. Playlist and favorites playback tested in the desktop client. Album playback and natural track endings still need live verification.
+          Validation: 46 automated tests, TypeScript check and build passed. Desktop checks covered both buttons, paused insertion, natural track transitions, the 30-second counter, and plugin reload. Compact layout and comparative listening remain unverified; see VALIDATION.md.
           NOTES
-          gh release create latest store.json local.smart-shuffle.json local.smart-shuffle.mjs local.smart-shuffle.mjs.map \
+          assets=(store.json local.smart-shuffle.json local.smart-shuffle.mjs local.smart-shuffle.mjs.map)
+          tag="v$version"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Version $version is already published; refusing to replace versioned assets."
+            exit 1
+          fi
+          gh release create "$tag" "${assets[@]}" \
             --target "$RELEASE_COMMIT" --title "Smart Shuffle $version" --notes-file notes.md --latest
+          if gh release view latest >/dev/null 2>&1; then
+            gh release upload latest "${assets[@]}" --clobber
+            gh api --method PATCH "repos/$GH_REPO/git/refs/tags/latest" -f sha="$RELEASE_COMMIT" -F force=true
+            gh release edit latest --title "Smart Shuffle $version (rolling download)" --notes-file notes.md --latest=false
+          else
+            gh release create latest "${assets[@]}" \
+              --target "$RELEASE_COMMIT" --title "Smart Shuffle $version (rolling download)" --notes-file notes.md --latest=false
+          fi

@@ -38,7 +38,8 @@ export function snapshot(): Snapshot {
     reason,
     playing: playback.playbackState === 'PLAYING',
     transition: coherent ? `${current?.uid}:${context?.playbackSessionId ?? ''}` : '',
-    currentId, currentUid: current?.uid ?? '',
+    currentId, currentUid: current?.uid ?? '', currentIndex: queue.currentIndex,
+    allowExplicit: state.settings.explicitContentEnabled,
     queueIds: queue.elements.map(item => id(item.mediaItemId)),
     queueUids: queue.elements.map(item => item.uid),
     sourceIds: queue.originalSource.map(item => id(item.mediaItemId)),
@@ -82,6 +83,7 @@ export function makePorts(report: (message: string) => void, diagnose: (message:
         return {
           id: id(track.id),
           ...(typeof track.title === 'string' ? { title: track.title } : {}),
+          ...(track.explicit === true ? { explicit: true } : {}),
           playable: Boolean(id(track.id)) && type === 'track' && track.contentType !== 'video' &&
             track.allowStreaming === true && track.streamReady === true &&
             (allowExplicit || track.explicit !== true),

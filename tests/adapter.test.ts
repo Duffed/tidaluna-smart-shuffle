@@ -183,7 +183,7 @@ test('adapter loads radio without PLAY_MIX, correlates IDs, filters streaming an
   assert.deepEqual(dispatched, ['mix-id', 'mix-tracks']);
   assert.deepEqual(tracks, [
     { id: '2', playable: true }, { id: '3', playable: false },
-    { id: '4', playable: false }, { id: '5', playable: false },
+    { id: '4', explicit: true, playable: false }, { id: '5', playable: false },
   ]);
   assert.equal([...listeners.values()].reduce((n, s) => n + s.size, 0), 0);
 });
@@ -203,7 +203,7 @@ test('live radio payload wraps tracks in item/type; streaming, video and explici
     const tracks = await makePorts(() => {}, message => diagnostics.push(message)).radio('1', new AbortController().signal);
     assert.deepEqual(tracks, [
       { id: '6', title: 'Live radio result', playable: true }, { id: '7', playable: true },
-      { id: '8', playable: false }, { id: '9', playable: false }, { id: '10', playable: false },
+      { id: '8', playable: false }, { id: '9', playable: false }, { id: '10', explicit: true, playable: false },
     ]);
     assert.match(diagnostics[0], /5 tracks, 2 playable/);
   } finally { actions['mix/LOAD_TRACK_LIST_FOR_MIX_ID'] = previous; }
