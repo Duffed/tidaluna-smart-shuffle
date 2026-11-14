@@ -1,6 +1,6 @@
 {
   "name": "@Duffed/tidaluna-prettier",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Übersichtliche Luna-Einstellungen mit einklappbaren Plugins, Entwickler-Avataren und Suche.",
   "author": {
     "name": "Duffed",
@@ -9,5 +9,5 @@
   },
   "homepage": "https://github.com/Duffed/tidaluna-prettier",
   "dependencies": [],
-  "hash": "795139bf011ad0e9cbbaab6e0033a8c0accba378d3208138404988e5d6740ddf"
+  "hash": "2c980780762345f32911891c9c948a5ce6383489d79e0148e40e2cfc79e794ce"
 }
