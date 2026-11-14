@@ -40,7 +40,7 @@ Tidal Desktop 2.48.0, existing TidaLuna installation, local 0.4.0 build served f
 7. Paused playback and restored On playback start, enabled automation, interval 3, and Queue mode.
 8. Reloaded the final build and verified that the player + button still inserted exactly one suggestion while paused. Reloading again removed the pending test suggestion and left the original upcoming queue intact; one + and one star remained visible.
 
-The local development build remains installed; the public GitHub distribution was not changed. The loopback development server is needed to fetch rebuilt files on reload. Existing TidaLuna caching can retain the installed code, but this is not a published release. The settings panel was collapsed during the reload check; a separate lyrics plugin overlapped its header at the bottom of the window. Maximized and restored large-window controls were inspected, but narrower/mini-player layouts were not verified.
+At the end of this live check, the local development build remained installed and the public GitHub distribution had not yet changed. Development installations require the loopback server to fetch rebuilt files on reload; use the public installation URL in README.md after publication. The settings panel was collapsed during the reload check; a separate lyrics plugin overlapped its header at the bottom of the window. Maximized and restored large-window controls were inspected, but narrower/mini-player layouts were not verified.
 
 These checks establish the basic workflow, not subjective recommendation quality. Listening comparisons between homogeneous and mixed queues remain a human acceptance check.
 
