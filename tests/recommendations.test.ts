@@ -210,3 +210,38 @@ test('a played recommendation retained in queue history does not block future su
   assert.deepEqual(f.removed, ['own-2']);
   assert.ok(f.s.queueUids.includes('own-1'));
 });
+
+function removePending(f: ReturnType<typeof fixture>) {
+  const index = f.s.queueUids.findIndex(uid => uid.startsWith('own-'));
+  assert.ok(index >= 0);
+  f.s.queueIds.splice(index, 1); f.s.queueUids.splice(index, 1);
+}
+
+test('session history excludes removed unheard suggestions across source and option changes', async () => {
+  const f = fixture({ recommendationSource: 'current' });
+  f.radio(async () => [track('first'), track('second')]);
+  f.engine.requestNow(); await settle(); removePending(f);
+  f.s.source = 'another-playlist';
+  f.engine.configure({ ...f.config, enabled: true, interval: 20 });
+  f.engine.requestNow(); await settle();
+  assert.deepEqual(f.inserted, ['first', 'second']);
+  removePending(f);
+  f.engine.requestNow(); await settle();
+  assert.deepEqual(f.inserted, ['first', 'second']);
+});
+
+test('automatic and manual recommendations share session history', async () => {
+  const f = fixture({ enabled: true, interval: 1, recommendationSource: 'current' });
+  await settle(); removePending(f);
+  f.radio(async () => [track('new'), track('fresh')]);
+  f.engine.configure({ ...f.config, enabled: false });
+  f.engine.requestNow(); await settle();
+  assert.deepEqual(f.inserted, ['new', 'fresh']);
+});
+
+test('a fresh engine session may suggest the same track again', async () => {
+  const first = fixture(); first.engine.requestNow(); await settle(); first.engine.dispose();
+  const second = fixture(); second.engine.requestNow(); await settle();
+  assert.deepEqual(first.inserted, ['new']);
+  assert.deepEqual(second.inserted, ['new']);
+});

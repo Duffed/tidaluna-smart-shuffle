@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+
+- Prevent repeated recommendations within one plugin session, including suggestions removed before playback. Share the in-memory history across manual/automatic suggestions and source/settings changes; reset it on plugin reload or app restart.
+
 ## 0.4.0
 
 - Default to recommendations based on up to five distinct tracks spread across the loaded remaining queue; retain current-track mode.

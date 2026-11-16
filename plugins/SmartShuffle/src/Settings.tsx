@@ -39,6 +39,6 @@ export function Settings() {
     <p>Works with all local music sources. Remote playback, Repeat One, and videos temporarily suspend recommendations.</p>
     <p role="status">{status} · Progress: {state.count}/{prefs.interval} · Source: {prefs.recommendationSource === 'queue' ? 'Queue' : 'Current track'}</p>
     <details><summary>Last radio request diagnostics</summary><pre style={{ whiteSpace: 'pre-wrap', fontSize: 12 }}>{details}</pre></details>
-    <small>Version 0.4.0</small>
+    <small>Version 0.4.1</small>
   </section>;
 }

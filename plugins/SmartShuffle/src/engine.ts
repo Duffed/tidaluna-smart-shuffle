@@ -106,6 +106,8 @@ export class SmartShuffle {
   private wasPlaying = false;
   private eligible = false;
   private recent: string[] = [];
+  // Lifetime of this engine only: keep even unheard/removed recommendations excluded.
+  private suggested = new Set<string>();
   private owned = new Map<string, Owned>();
   private job?: Job;
   private attempt = 0;
@@ -313,11 +315,12 @@ export class SmartShuffle {
           (job.origin === 'automatic' && !this.options.enabled) || this.signature(now) !== job.signature) return;
       this.prune(now);
       if (this.pending(now)) return;
-      const excluded = new Set([...collection, ...freshCollection, ...now.sourceIds, ...now.queueIds, ...this.recent, ...seeds]);
+      const excluded = new Set([...collection, ...freshCollection, ...now.sourceIds, ...now.queueIds, ...this.recent, ...this.suggested, ...seeds]);
       const candidate = rankTracks(radios).find(track => track.playable &&
         !(now.allowExplicit === false && track.explicit) && !excluded.has(track.id));
-      if (!candidate) { this.message = 'No new recommendation: all radio results are unavailable or already in your collection, queue, or recent history.'; return; }
+      if (!candidate) { this.message = 'No new recommendation: all radio results are unavailable or already in your collection, queue, recent history, or this session’s recommendations.'; return; }
       const uid = this.ports.insert(candidate.id);
+      this.suggested.add(candidate.id);
       this.owned.set(uid, { id: candidate.id, source: start.source, origin: job.origin, title: candidate.title });
       this.count = 0;
       this.counted = true;

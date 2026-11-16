@@ -74,3 +74,7 @@ On November 8, 2026, the failure in 0.2.0 was reproduced: the client reported so
 - Repeated reload stress testing and direct listener-count inspection (basic reload cleanup and single visible controls were checked).
 
 Album behavior remains unverified in a live client. The earlier favorites checks used manual Next transitions; the 0.4.0 live check used a mix source. Full compact/mini-player layout coverage and subjective comparison listening are still outstanding.
+
+## Session recommendation history (0.4.1)
+
+Regression tests cover removed unheard suggestions, source/settings changes, shared automatic/manual history, exhausted candidates, and reset in a new engine session. Live client verification is pending.
